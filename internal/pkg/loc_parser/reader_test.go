@@ -1,7 +1,8 @@
-package reader
+package loc_parser
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"testing"
@@ -21,7 +22,7 @@ func TestReader(t *testing.T) {
 
 	buff = []byte{0x45, 0x41, 0, 0}
 	r = bytes.NewReader(buff)
-	i, err := ReadAsInt32(r)
+	i, err := ReadAsUint32(r)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,4 +57,38 @@ func TestReader(t *testing.T) {
 	// }
 
 	// fmt.Println("Output", val)
+}
+
+func TestWriter(t *testing.T) {
+	var b []byte
+	b = binary.AppendUvarint(b, 500)
+	fmt.Println(b, len(b), cap(b))
+
+	b = append(b, []byte("Hello World")...)
+
+	r := bytes.NewReader(b)
+	n, err := binary.ReadUvarint(r)
+	if err != nil {
+		panic(err)
+	}
+
+	rfb, _ := r.ReadByte()
+	str, _ := io.ReadAll(r)
+
+	fmt.Println("n", n)
+	fmt.Printf("rfb: %c | %c%s\n", rfb, rfb, str)
+
+	var buf bytes.Buffer
+
+	WriteFromString("Nama:\nAlfian", &buf)
+
+	for i, b := range buf.Bytes() {
+		fmt.Printf("%d.\t%c\t%d\t%x\n", i, b, b, b)
+	}
+
+	if err := WriteFromUint32(5000, &buf); err != nil {
+		return
+	}
+
+	fmt.Println(buf.Bytes())
 }

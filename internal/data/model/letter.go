@@ -3,7 +3,8 @@ package model
 import (
 	"bytes"
 	"fmt"
-	"locconverter/internal/pkg/reader"
+
+	"locconverter/internal/pkg/loc_parser"
 )
 
 type Letter struct {
@@ -13,13 +14,22 @@ type Letter struct {
 	Container
 }
 
-// TODO
-func (letter *Letter) Encode() []byte {
-	return nil
+func (letter *Letter) Encode() ([]byte, error) {
+	var buf bytes.Buffer
+
+	if err := loc_parser.WriteFromString(letter.Container.String(), &buf); err != nil {
+		return nil, err
+	}
+
+	if err := loc_parser.WriteFromString(letter.value, &buf); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
 
 func (letter *Letter) Decode(r *bytes.Reader) error {
-	key, err := reader.ReadAsString(r)
+	key, err := loc_parser.ReadAsString(r)
 	if err != nil {
 		return err
 	}
@@ -28,7 +38,7 @@ func (letter *Letter) Decode(r *bytes.Reader) error {
 		return err
 	}
 
-	val, err := reader.ReadAsString(r)
+	val, err := loc_parser.ReadAsString(r)
 	if err != nil {
 		return err
 	}
@@ -44,6 +54,10 @@ func (letter *Letter) Value() string {
 
 func (letter *Letter) SetValue(value string) {
 	letter.value = value
+	if letter.originalValue == "" {
+		letter.originalValue = value
+	}
+
 	letter.isModified = letter.value != letter.originalValue
 }
 

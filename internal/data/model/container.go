@@ -44,7 +44,6 @@ func (container *Container) Parse(val string) error {
 	return nil
 }
 
-// TODO
 func (container *Container) String() string {
 	var (
 		variant string

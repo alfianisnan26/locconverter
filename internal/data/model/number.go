@@ -3,23 +3,33 @@ package model
 import (
 	"bytes"
 	"fmt"
-	"locconverter/internal/pkg/reader"
+
+	"locconverter/internal/pkg/loc_parser"
 )
 
 type Number struct {
-	value         int32
-	originalValue int32
+	value         uint32
+	originalValue uint32
 
 	Container
 }
 
-// TODO
-func (number *Number) Encode() []byte {
-	return nil
+func (number *Number) Encode() ([]byte, error) {
+	var buf bytes.Buffer
+
+	if err := loc_parser.WriteFromString(number.Container.String(), &buf); err != nil {
+		return nil, err
+	}
+
+	if err := loc_parser.WriteFromUint32(number.value, &buf); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
 
 func (number *Number) Decode(r *bytes.Reader) error {
-	key, err := reader.ReadAsString(r)
+	key, err := loc_parser.ReadAsString(r)
 	if err != nil {
 		return err
 	}
@@ -28,7 +38,7 @@ func (number *Number) Decode(r *bytes.Reader) error {
 		return err
 	}
 
-	val, err := reader.ReadAsInt32(r)
+	val, err := loc_parser.ReadAsUint32(r)
 	if err != nil {
 		return err
 	}
@@ -38,16 +48,16 @@ func (number *Number) Decode(r *bytes.Reader) error {
 	return nil
 }
 
-func (number *Number) Value() int32 {
+func (number *Number) Value() uint32 {
 	return number.value
 }
 
-func (number *Number) SetValue(value int32) {
+func (number *Number) SetValue(value uint32) {
 	number.value = value
 	number.isModified = number.value != number.originalValue
 }
 
-func (number *Number) OriginalValue() int32 {
+func (number *Number) OriginalValue() uint32 {
 	return number.originalValue
 }
 
